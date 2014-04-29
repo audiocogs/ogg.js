@@ -1,0 +1,231 @@
+/**
+ * Low-level interface wrapped around ogg/vorbis/theora libraries
+ * cross-compiled with emscripten.
+ *
+ * Used by the high-level player interface.
+ *
+ * @author Brion Vibber <brion@pobox.com>
+ * @copyright 2013-2014
+ * @license MIT-style
+ */
+OgvJs = (function(options) {
+	options = options || {};
+	var self = this,
+		processAudio = (options.audio !== undefined) ? !!options.audio : true,
+		processVideo = (options.video !== undefined) ? !!options.video : true;
+    
+    var Module = {
+    	noInitialRun: true,
+    	noExitRuntime: true,
+    	TOTAL_MEMORY: 32 * 1024 * 1024, // default heap is 16M
+    	print: function(str) {
+    		console.log("OgvJs: " + str);
+    	}
+    };
+
+	#include "../build/js/ogv-libs.js"
+    
+    var OgvJsInit = Module.cwrap('OgvJsInit', 'void', ['number', 'number']);
+    var OgvJsDestroy = Module.cwrap('OgvJsDestroy', 'void', []);
+    var OgvJsReceiveInput = Module.cwrap('OgvJsReceiveInput', 'void', ['*', 'number']);
+    var OgvJsProcess = Module.cwrap('OgvJsProcess', 'int', []);
+    var OgvJsDecodeFrame = Module.cwrap('OgvJsDecodeFrame', 'int', []);
+    var OgvJsDecodeAudio = Module.cwrap('OgvJsDecodeAudio', 'int', []);
+
+	var inputBuffer, inputBufferSize;
+	function reallocInputBuffer(size) {
+		if (inputBuffer && inputBufferSize >= size) {
+			// We're cool
+			return inputBuffer;
+		}
+		if (inputBuffer) {
+			Module._free(inputBuffer);
+		}
+		inputBufferSize = size;
+		console.log('reallocating buffer');
+		inputBuffer = Module._malloc(inputBufferSize);
+		return inputBuffer;
+	}
+	
+	function OgvJsLoadedMetadataCallback() {
+		if (self.onloadedmetadata) {
+			self.onloadedmetadata();
+		}
+	}
+	
+	function OgvJsInitVideoCallback(info) {
+		self.hasVideo = true;
+		if (self.oninitvideo) {
+			self.oninitvideo(info);
+		}
+	}
+	
+	function OgvJsOutputFrameReadyCallback() {
+		self.frameReady = true;
+	}
+
+	var queuedFrame = null;
+	function OgvJsFrameCallback(frameBuffer) {
+		queuedFrame = frameBuffer;
+	}
+	
+	function OgvJsInitAudioCallback(info) {
+		self.hasAudio = true;
+		if (self.oninitaudio) {
+			self.oninitaudio(info);
+		}
+	}
+
+	function OgvJsOutputAudioReadyCallback() {
+		self.audioReady = true;
+	}
+
+	var audioBuffers = [];
+	function OgvJsAudioCallback(audioData) {
+		audioBuffers.push(audioData);
+	}
+
+	/**
+	 * @property function({codec, frameWidth, frameHeight, fps, picWidth, picHeight, picX, picY}) event handler when initializing video stream
+	 */
+	self.onvideoinit = null;
+
+	/**
+	 * @property function({codec, channels, rate}) event handler when initializing audio stream
+	 */
+	self.onaudioinit = null;
+
+	/**
+	 * @property boolean does the media stream contain video?
+	 */
+	self.hasVideo = false;
+
+	/**
+	 * @property boolean does the media stream contain audio?
+	 */
+	self.hasAudio = false;
+
+	/**
+	 * @property boolean Have we found a frame that's ready to be decoded?
+	 */
+	self.frameReady = false;
+	
+	/**
+	 * @property boolean Have we found an audio buffer that's ready to be decoded?
+	 */
+	self.audioReady = false;
+	
+	/**
+	 * @property number time position in seconds of last decoded frame
+	 */
+	self.videoPosition = 0.0;
+	
+	/**
+	 * Tear down the instance when done.
+	 *
+	 * todo: do we need to do something more to destroy the C environment?
+	 */
+	self.destroy = function() {
+		if (inputBuffer) {
+			Module._free(inputBuffer);
+			inputBuffer = undefined;
+		}
+		OgvJsDestroy();
+		console.log("ogv.js destroyed");
+	};
+	
+	/**
+	 * Queue up a chunk of input data for later processing.
+	 *
+	 * @param ArrayBuffer data
+	 */
+	self.receiveInput = function(data) {
+		// Map the blob into a buffer in emscripten's runtime heap
+		var len = data.byteLength;
+		var buffer = reallocInputBuffer(len);
+		Module.HEAPU8.set(new Uint8Array(data), buffer);
+
+		OgvJsReceiveInput(buffer, len);
+	};
+	
+	/**
+	 * Process the next packet in the stream
+	 */
+	self.process = function() {
+		return OgvJsProcess();
+	}
+	
+	/**
+	 * Decode the last-found video packet
+	 *
+	 * @return boolean true if successful decode, false if failure
+	 */
+	self.decodeFrame = function() {
+		if (self.frameReady) {
+			self.frameReady = false;
+			return !!OgvJsDecodeFrame();
+		} else {
+			throw new Error("called decodeFrame when no frame ready");
+		}
+	}
+	
+	/**
+	 * Return the last-decoded frame, if any.
+	 *
+	 * @return Object {yBytes, cbBytes, crBytes, yStride, cbStride, crStride, width, height, hdec, vdec, timestamp}
+	 */
+	self.dequeueFrame = function() {
+		if (queuedFrame) {
+			var frame = queuedFrame;
+			queuedFrame = null;
+			return frame;
+		} else {
+			throw new Error("called dequeueFrame when no frame ready");
+		}
+	}
+
+	/**
+	 * Decode the last-found audio packets
+	 *
+	 * @return boolean true if successful decode, false if failure
+	 */
+	self.decodeAudio = function() {
+		if (self.audioReady) {
+			self.audioReady = false;
+			return !!OgvJsDecodeAudio();
+		} else {
+			throw new Error("called decodeAudio when no audio ready");
+		}
+	}
+	
+	self.audioQueued = function() {
+		return audioBuffers.length > 0;
+	};
+	
+	/**
+	 * Return the next decoded audio buffer
+	 *
+	 * @return array of audio thingies
+	 */
+	self.dequeueAudio = function() {
+		if (self.audioQueued()) {
+			var buffer = audioBuffers.shift();
+			self.audioReady = (audioBuffers.length > 0);
+			return buffer;
+		} else {
+			throw new Error("called dequeueAudio when no audio ready");
+		}
+	}
+
+	/**
+	 * Is there processed data to handle?
+	 *
+	 * @return boolean
+	 */	
+	self.dataReady = function() {
+		return self.audioReady || self.frameReady;
+	}
+
+	OgvJsInit(processAudio ? 1 : 0, processVideo ? 1 : 0);
+	return self;
+});
