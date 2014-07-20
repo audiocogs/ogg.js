@@ -1,0 +1,22 @@
+{
+  "name": "ogg.js",
+  "version": "0.1.0",
+  "description": "An Ogg demuxer for aurora.js",
+  "main": "src/ogg.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/audiocogs/ogg.js.git"
+  },
+  "keywords": [
+    "av",
+    "aurora.js",
+    "audio",
+    "codec"
+  ],
+  "author": "Devon Govett <devongovett@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/audiocogs/ogg.js/issues"
+  },
+  "homepage": "https://github.com/audiocogs/ogg.js"
+}
