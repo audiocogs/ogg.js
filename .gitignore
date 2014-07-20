@@ -2,3 +2,4 @@
 build/aurora.js
 build/lib*
 *.ogg
+node_modules
