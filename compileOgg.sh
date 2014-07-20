@@ -21,4 +21,5 @@ emmake make install
 
 # compile wrapper
 cd ..
+mkdir -p build
 emcc -O3 -s RESERVED_FUNCTION_POINTERS=50 -s EXPORTED_FUNCTIONS="['_AVOggInit', '_AVOggRead', '_AVOggDestroy']" -I libogg/include -Llibogg/lib -logg src/ogg.c -o build/libogg.js

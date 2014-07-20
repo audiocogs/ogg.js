@@ -1,5 +1,4 @@
 .DS_Store
-build/aurora.js
-build/lib*
+build/
 *.ogg
 node_modules

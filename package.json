@@ -7,6 +7,17 @@
     "type": "git",
     "url": "git://github.com/audiocogs/ogg.js.git"
   },
+  "peerDependencies": {
+    "av": "~0.4.0"
+  },
+  "devDependencies": {
+    "exorcist": "^0.1.6",
+    "browserify": "^4.1.10",
+    "browserify-shim": "^3.5.0"
+  },
+  "browserify-shim": {
+    "av": "global:AV"
+  },
   "keywords": [
     "av",
     "aurora.js",
