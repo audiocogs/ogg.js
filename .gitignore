@@ -2,3 +2,4 @@
 build/
 *.ogg
 node_modules
+libogg/
