@@ -71,3 +71,4 @@ var OggDemuxer = AV.Demuxer.extend(function() {
 });
 
 module.exports = OggDemuxer;
+AV.OggDemuxer = OggDemuxer; // for browser
