@@ -12,12 +12,13 @@ if [ ! -f configure ]; then
   sed -i '' 's/-O4/-O2/g' configure
   
   # finally, run configuration script
-  emconfigure ./configure
+  emconfigure ./configure --prefix="`pwd`" --disable-static
 fi
 
 # compile libogg
 emmake make
+emmake make install
 
 # compile wrapper
 cd ..
-emcc -O2 -s ASM_JS=1 -s EXPORTED_FUNCTIONS="['_AVOggInit', '_AVOggRead', '_AVOggDestroy']" --js-library src/callback.js -I libogg/include -Llibogg/src/.libs/ -logg src/ogg.c -o build/libogg.js
+emcc -O3 -s RESERVED_FUNCTION_POINTERS=50 -s EXPORTED_FUNCTIONS="['_AVOggInit', '_AVOggRead', '_AVOggDestroy']" -I libogg/include -Llibogg/lib -logg src/ogg.c -o build/libogg.js
