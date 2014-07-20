@@ -1,15 +1,34 @@
 ogg.js
 ======
 
-libogg compiled to JavaScript with Emscripten for [Aurora.js](https://github.com/audiocogs/aurora.js).
+An Ogg demuxer for [Aurora.js](https://github.com/audiocogs/aurora.js), compiled with Emscripten.
 
-## Building
+## Usage
+
+ogg.js isn't very useful without some plugins. Some examples of audio formats that can be stored in an 
+Ogg container include:
+
+* [Vorbis](https://github.com/audiocogs/vorbis.js)
+* [Opus](https://github.com/audiocogs/opus.js)
+* [FLAC](https://gitub.com/audiocogs/flac.js)
+
+ogg.js includes a FLAC plugin by default, but does not include a FLAC decoder, which you can find
+at the above link.  This is because FLAC occurs most often in its own container format, rather than Ogg.
+The other formats listed include their own Ogg plugins in their respective repositories.
+
+If you're using ogg.js and its associated codecs in a browser, you should either build your application 
+with Browserify or include the prebuilt versions of aurora.js, ogg.js and the codecs you want to support
+in your HTML page as `<script>` tags.
+  
+If you're using Node, you can simply require `av`, `ogg.js`, and the codecs you want to use.
+
+## Building from source
 
 1. Install [Emscripten](https://github.com/kripken/emscripten/wiki/Emscripten-SDK).
 2. Clone git submodules
 3. Run `npm install` to install dependencies
 4. Run `make libogg` to configure and build libogg and the C wrapper. Run this again whenever you make changes to the C wrapper or a new version of libogg is released.
-5. Run `make browser` to generate a JavaScript file with libogg, or use browserify to build your application.
+5. Run `make browser` to generate a browser version of ogg.js, or use browserify to build your application.
 
 ## License
 
