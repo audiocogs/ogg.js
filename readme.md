@@ -10,7 +10,7 @@ Ogg container include:
 
 * [Vorbis](https://github.com/audiocogs/vorbis.js)
 * [Opus](https://github.com/audiocogs/opus.js)
-* [FLAC](https://gitub.com/audiocogs/flac.js)
+* [FLAC](https://github.com/audiocogs/flac.js)
 
 If you're using ogg.js and its associated codecs in a browser, you should either build your application 
 with Browserify or include the prebuilt versions of aurora.js, ogg.js and the codecs you want to support
