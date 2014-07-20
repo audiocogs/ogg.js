@@ -12,10 +12,6 @@ Ogg container include:
 * [Opus](https://github.com/audiocogs/opus.js)
 * [FLAC](https://gitub.com/audiocogs/flac.js)
 
-ogg.js includes a FLAC plugin by default, but does not include a FLAC decoder, which you can find
-at the above link.  This is because FLAC occurs most often in its own container format, rather than Ogg.
-The other formats listed include their own Ogg plugins in their respective repositories.
-
 If you're using ogg.js and its associated codecs in a browser, you should either build your application 
 with Browserify or include the prebuilt versions of aurora.js, ogg.js and the codecs you want to support
 in your HTML page as `<script>` tags.
