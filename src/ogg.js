@@ -52,11 +52,12 @@ var OggDemuxer = AV.Demuxer.extend(function() {
   };
   
   this.prototype.readChunk = function() {
-    do {
-      var toRead = BUFFER_SIZE <= this._stream.list.availableBytes ? BUFFER_SIZE : this._stream.list.availableBytes;
+    var avail;
+    while((avail = this._stream.remainingBytes()) > 0) {
+      var toRead = BUFFER_SIZE <= avail ? BUFFER_SIZE : avail;
       Ogg.HEAPU8.set(this._stream.readBuffer(toRead).data, this.buf);
       Ogg._AVOggRead(this.ogg, this.buf, toRead, this.callback);
-    } while (this._stream.available(BUFFER_SIZE))
+    }
   };
   
   this.prototype.destroy = function() {
