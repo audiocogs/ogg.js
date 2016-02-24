@@ -22,5 +22,5 @@ emmake make install
 # compile wrapper
 cd ..
 mkdir -p build
-emcc -O3 -s RESERVED_FUNCTION_POINTERS=50 -s EXPORTED_FUNCTIONS="['_AVOggInit', '_AVOggRead', '_AVOggDestroy']" -I libogg/include -Llibogg/build/lib -logg src/ogg.c -o build/libogg.js
+emcc -O3 --memory-init-file 0 -s RESERVED_FUNCTION_POINTERS=50 -s EXPORTED_FUNCTIONS="['_AVOggInit', '_AVOggRead', '_AVOggDestroy']" -I libogg/include -Llibogg/build/lib -logg src/ogg.c -o build/libogg.js
 echo "module.exports = Module" >> build/libogg.js
