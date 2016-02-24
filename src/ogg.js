@@ -22,7 +22,7 @@ var OggDemuxer = AV.Demuxer.extend(function() {
     // copy the stream in case we override it, e.g. flac
     this._stream = this.stream;
     
-    this.callback = Ogg.Runtime.addFunction(function(packet, bytes) {
+    this.callback = Ogg.Runtime.addFunction(function(packet, bytes, streamEnd, granulePos) {
       var data = new Uint8Array(Ogg.HEAPU8.subarray(packet, packet + bytes));      
       
       // find plugin for codec
@@ -47,14 +47,16 @@ var OggDemuxer = AV.Demuxer.extend(function() {
       if (!doneHeaders)
         doneHeaders = plugin.readHeaders.call(self, data);
       else
-        plugin.readPacket.call(self, data);
+        plugin.readPacket.call(self, data, streamEnd, granulePos);
     });
   };
   
   this.prototype.readChunk = function() {
-    while (this._stream.available(BUFFER_SIZE)) {
-      Ogg.HEAPU8.set(this._stream.readBuffer(BUFFER_SIZE).data, this.buf);
-      Ogg._AVOggRead(this.ogg, this.buf, BUFFER_SIZE, this.callback);
+    var avail;
+    while((avail = this._stream.remainingBytes()) > 0) {
+      var toRead = BUFFER_SIZE <= avail ? BUFFER_SIZE : avail;
+      Ogg.HEAPU8.set(this._stream.readBuffer(toRead).data, this.buf);
+      Ogg._AVOggRead(this.ogg, this.buf, toRead, this.callback);
     }
   };
   
