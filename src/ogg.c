@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ogg/ogg.h>
 
-typedef void (*AVCallback)(unsigned char *, int);
+typedef void (*AVCallback)(unsigned char *, int, long, long);
 
 typedef struct {
   ogg_sync_state *state;
@@ -38,7 +38,7 @@ int AVOggRead(AVOgg *ogg, char *buffer, int buflen, AVCallback callback) {
   
     // read packets
     while (ogg_stream_packetout(ogg->stream, &ogg->packet) == 1)
-      callback(ogg->packet.packet, ogg->packet.bytes);
+      callback(ogg->packet.packet, ogg->packet.bytes, ogg->packet.e_o_s, ogg->packet.granulepos);
   }
     
   return 0;
