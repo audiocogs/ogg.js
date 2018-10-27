@@ -22,7 +22,7 @@ var OggDemuxer = AV.Demuxer.extend(function() {
     // copy the stream in case we override it, e.g. flac
     this._stream = this.stream;
     
-    this.callback = Ogg.Runtime.addFunction(function(packet, bytes) {
+    this.callback = Ogg.addFunction(function(packet, bytes) {
       var data = new Uint8Array(Ogg.HEAPU8.subarray(packet, packet + bytes));      
       
       // find plugin for codec
@@ -60,7 +60,7 @@ var OggDemuxer = AV.Demuxer.extend(function() {
   
   this.prototype.destroy = function() {
     this._super();
-    Ogg.Runtime.removeFunction(this.callback);
+    Ogg.removeFunction(this.callback);
     Ogg._AVOggDestroy(this.ogg);
     Ogg._free(this.buf);
     
